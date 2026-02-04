@@ -1,0 +1,173 @@
+/* Reuse admin/citizen home page CSS */
+.admin-home-container {
+  position: relative;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  justify-content: center;
+  padding-top: 60px;
+}
+
+.background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.35);
+  z-index: 0;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 30px 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1000px;
+  width: 90%;
+  overflow: hidden;
+}
+
+.recent-posts-label {
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.latest-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.latest-posts::-webkit-scrollbar {
+  width: 6px;
+}
+
+.latest-posts::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.3);
+  border-radius: 10px;
+}
+
+.post-card {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 15px;
+  background-color: #fff;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.post-card.alert {
+  border-left: 6px solid #e53935;
+  background-color: rgba(255,235,238,1);
+}
+
+.post-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #ccc;
+}
+
+.post-content {
+  flex: 1;
+}
+
+.name-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.post-name {
+  font-weight: 700;
+  position: relative;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.hover-details {
+  display: none;
+  position: absolute;
+  top: 22px;
+  left: 0;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.post-name:hover .hover-details {
+  display: inline-block;
+}
+
+.post-date {
+  font-size: 13px;
+  color: #666;
+}
+
+.post-content p {
+  margin-top: 5px;
+  font-size: 15px;
+  color: #333;
+}
+
+.post-attachment {
+  width: 100%;
+  max-height: 300px;
+  margin-top: 10px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.no-posts {
+  text-align: center;
+  font-size: 16px;
+  color: #555;
+}
+
+.main-btn {
+  padding: 12px 25px;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  background-color: #1976d2;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.main-btn:hover {
+  background-color: #135ba1;
+}

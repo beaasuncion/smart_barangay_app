@@ -1,0 +1,54 @@
+.citizen-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url("../assets/bg.jpg");
+  background-size: cover;
+  background-position: center;
+  font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+.citizen-login-card {
+  background: rgba(255,255,255,0.95);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.citizen-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  text-align: left;
+}
+
+.citizen-login-form label {
+  font-weight: 600;
+  color: #555;
+}
+
+.citizen-login-form input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.citizen-login-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  background-color: #4CAF50;
+  color: #fff;
+  cursor: pointer;
+}
+
+.citizen-login-btn:hover {
+  background-color: #45a049;
+}

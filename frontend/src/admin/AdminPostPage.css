@@ -1,0 +1,224 @@
+/* Admin / Citizen Home Page container */
+.Citizen-home-container {
+  position: relative;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  justify-content: center;
+  padding-top: 60px;
+}
+
+.background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.35);
+  z-index: 0;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.panel {
+  position: relative;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 25px 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1000px;
+  width: 90%;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.top-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin-bottom: 20px;
+}
+
+.top-buttons button {
+  padding: 15px 50px;
+  font-size: 18px;
+  border-radius: 12px;
+  border: none;
+  background-color: #fff;
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: 0.3s;
+}
+
+.top-buttons button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
+
+.recent-posts-label {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.latest-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.latest-posts::-webkit-scrollbar {
+  width: 6px;
+}
+
+.latest-posts::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.3);
+  border-radius: 10px;
+}
+
+.post-card {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  border-radius: 15px;
+  background-color: #fff;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.post-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.post-card.alert {
+  border-left: 6px solid #e53935;
+  background-color: rgba(255,235,238,1);
+}
+
+.post-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #ccc;
+}
+
+.post-content {
+  flex: 1;
+}
+
+.name-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.post-name {
+  font-weight: 700;
+  position: relative;
+  cursor: pointer;
+}
+
+.hover-details {
+  display: none;
+  position: absolute;
+  top: 25px;
+  left: 0;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.post-name:hover .hover-details {
+  display: inline-block;
+}
+
+.post-date {
+  font-size: 13px;
+  color: #666;
+}
+
+.post-content p:last-child {
+  margin-top: 8px;
+}
+
+.no-posts {
+  text-align: center;
+  font-size: 16px;
+  color: #555;
+}
+
+.post-attachment {
+  width: 100%;
+  max-height: 300px;
+  margin-top: 10px;
+  border-radius: 15px;
+  object-fit: cover;
+}
+
+/* Burger Menu */
+.burger-menu-container {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 100;
+}
+
+.burger-btn {
+  font-size: 28px;
+  background: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  min-width: 180px;
+}
+
+.dropdown-menu button {
+  padding: 10px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.dropdown-menu button:hover {
+  background-color: rgba(0,0,0,0.05);
+}
