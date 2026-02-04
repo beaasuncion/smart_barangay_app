@@ -7,16 +7,21 @@ app.use(cors());
 app.use(express.json());
 
 /* ================== MYSQL CONNECTION (POOL) ================== */
-const db = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "Barangay123!",
-  database: "smart_barangay",
+const pool = mysql.createPool({
+  host: process.env.MYSQLHOST || 'metro.proxy.rlwy.net',
+  user: process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQLPASSWORD || 'SvusvxgCmsWEIveqfXCDDeVaZfLyBSNJ',
+  database: process.env.MYSQLDATABASE || 'railway',
+  port: process.env.MYSQLPORT || 49980,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  ssl: { rejectUnauthorized: false } // IMPORTANT!
 });
 
+const db = pool;
+
+// Test database connection
 db.getConnection((err, conn) => {
   if (err) {
     console.log("❌ MySQL Connection Failed:", err.message);
@@ -33,8 +38,10 @@ app.get('/', (req, res) => {
   res.json({
     success: true,
     message: '✅ BACKEND SERVER IS RUNNING!',
-    port: 5000,
-    time: new Date().toLocaleString()
+    port: process.env.PORT || 5000,
+    environment: process.env.NODE_ENV || 'development',
+    time: new Date().toLocaleString(),
+    railwayUrl: 'https://unique-beauty.up.railway.app'
   });
 });
 
@@ -44,10 +51,16 @@ app.get('/api/debug-db', async (req, res) => {
     // Test connection
     const [test] = await db.promise().query('SELECT 1 as test');
     
-    // Get all users
-    const [users] = await db.promise().query(
-      'SELECT id, first_name, email, status FROM users ORDER BY id DESC'
-    );
+    // Get all users (handle if table doesn't exist)
+    let users = [];
+    try {
+      const [userRows] = await db.promise().query(
+        'SELECT id, first_name, email, status FROM users ORDER BY id DESC'
+      );
+      users = userRows;
+    } catch (tableError) {
+      console.log('⚠️ Users table might not exist yet:', tableError.message);
+    }
     
     res.json({
       success: true,
@@ -55,14 +68,21 @@ app.get('/api/debug-db', async (req, res) => {
       testResult: test[0].test,
       totalUsers: users.length,
       users: users,
-      message: 'Database connection successful'
+      message: 'Database connection successful',
+      credentials: {
+        host: process.env.MYSQLHOST || 'metro.proxy.rlwy.net',
+        database: process.env.MYSQLDATABASE || 'railway',
+        port: process.env.MYSQLPORT || 49980
+      }
     });
   } catch (err) {
     console.error('❌ Database debug error:', err);
     res.status(500).json({
       success: false,
       dbConnected: false,
-      error: err.message
+      error: err.message,
+      sqlState: err.sqlState,
+      code: err.code
     });
   }
 });
@@ -70,25 +90,81 @@ app.get('/api/debug-db', async (req, res) => {
 /* ================== CHECK TABLE STRUCTURE ================== */
 app.get('/api/check-table', async (req, res) => {
   try {
-    // Check users table structure
-    const [structure] = await db.promise().query('DESCRIBE users');
+    // Check users table structure (handle if table doesn't exist)
+    let structure = [];
+    let statusValues = [];
+    let tableExists = true;
     
-    // Check all status values
-    const [statusValues] = await db.promise().query(
-      'SELECT DISTINCT status, COUNT(*) as count FROM users GROUP BY status'
-    );
+    try {
+      const [structureRows] = await db.promise().query('DESCRIBE users');
+      structure = structureRows;
+      
+      const [statusRows] = await db.promise().query(
+        'SELECT DISTINCT status, COUNT(*) as count FROM users GROUP BY status'
+      );
+      statusValues = statusRows;
+    } catch (tableError) {
+      tableExists = false;
+      console.log('⚠️ Users table does not exist yet');
+    }
     
     res.json({
       success: true,
+      tableExists: tableExists,
       tableStructure: structure,
       statusValues: statusValues,
-      message: 'Table check successful'
+      message: tableExists ? 'Table check successful' : 'Users table does not exist yet'
     });
   } catch (err) {
     console.error('❌ Table check error:', err);
     res.status(500).json({
       success: false,
       error: err.message
+    });
+  }
+});
+
+/* ================== CREATE USERS TABLE IF NOT EXISTS ================== */
+app.post('/api/create-users-table', async (req, res) => {
+  try {
+    const createTableSQL = `
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        first_name VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        status ENUM('pending', 'approve', 'rejected', 'reject') DEFAULT 'pending',
+        role ENUM('admin', 'citizen', 'staff') DEFAULT 'citizen',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    
+    const [result] = await db.promise().query(createTableSQL);
+    
+    // Insert sample data if table was created
+    const insertSampleSQL = `
+      INSERT IGNORE INTO users (first_name, email, password, status, role) VALUES
+      ('Admin User', 'admin@barangay.com', 'admin123', 'approve', 'admin'),
+      ('Juan Dela Cruz', 'juan@email.com', 'password123', 'approve', 'citizen'),
+      ('Maria Santos', 'maria@email.com', 'password123', 'pending', 'citizen')
+    `;
+    
+    const [insertResult] = await db.promise().query(insertSampleSQL);
+    
+    res.json({
+      success: true,
+      message: 'Users table created successfully',
+      created: result.warningStatus === 0,
+      sampleDataInserted: insertResult.affectedRows,
+      warnings: result.warningStatus
+    });
+  } catch (err) {
+    console.error('❌ Create table error:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      code: err.code,
+      sqlState: err.sqlState
     });
   }
 });
@@ -491,23 +567,75 @@ app.post('/api/test-sql', async (req, res) => {
   }
 });
 
+/* ================== RESET DATABASE (DEVELOPMENT ONLY) ================== */
+app.post('/api/reset-db', async (req, res) => {
+  try {
+    // Drop table if exists
+    await db.promise().query('DROP TABLE IF EXISTS users');
+    
+    // Create table fresh
+    const createTableSQL = `
+      CREATE TABLE users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        first_name VARCHAR(100) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        status ENUM('pending', 'approve', 'rejected', 'reject') DEFAULT 'pending',
+        role ENUM('admin', 'citizen', 'staff') DEFAULT 'citizen',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    
+    await db.promise().query(createTableSQL);
+    
+    // Insert sample data
+    const insertSampleSQL = `
+      INSERT INTO users (first_name, email, password, status, role) VALUES
+      ('Admin User', 'admin@barangay.com', 'admin123', 'approve', 'admin'),
+      ('Juan Dela Cruz', 'juan@email.com', 'password123', 'approve', 'citizen'),
+      ('Maria Santos', 'maria@email.com', 'password123', 'pending', 'citizen'),
+      ('Pedro Reyes', 'pedro@email.com', 'password123', 'rejected', 'citizen')
+    `;
+    
+    const [insertResult] = await db.promise().query(insertSampleSQL);
+    
+    res.json({
+      success: true,
+      message: 'Database reset successfully',
+      tablesCreated: ['users'],
+      sampleDataInserted: insertResult.affectedRows
+    });
+  } catch (err) {
+    console.error('❌ Reset database error:', err);
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
 /* ================== START SERVER ================== */
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log('🚀 BACKEND SERVER STARTED SUCCESSFULLY!');
-  console.log('📍 LOCAL:  http://localhost:' + PORT);
-  console.log('📡 Frontend should run on http://localhost:3000');
+  console.log('📍 PORT:', PORT);
+  console.log('🌐 Railway URL: https://unique-beauty.up.railway.app');
+  console.log('📊 MySQL Host: metro.proxy.rlwy.net:49980');
   console.log('='.repeat(60));
   console.log('\n📋 AVAILABLE ENDPOINTS:');
-  console.log('1. GET  http://localhost:' + PORT + '/');
-  console.log('2. GET  http://localhost:' + PORT + '/debug-users');
-  console.log('3. GET  http://localhost:' + PORT + '/api/debug-db');
-  console.log('4. GET  http://localhost:' + PORT + '/api/check-table');
-  console.log('5. GET  http://localhost:' + PORT + '/api/pending-users');
-  console.log('6. POST http://localhost:' + PORT + '/api/approve-user');
-  console.log('7. POST http://localhost:' + PORT + '/api/reject-user');
-  console.log('8. POST http://localhost:' + PORT + '/api/update-status');
-  console.log('9. POST http://localhost:' + PORT + '/api/test-sql');
+  console.log('1.  GET  https://unique-beauty.up.railway.app/');
+  console.log('2.  GET  https://unique-beauty.up.railway.app/api/debug-db');
+  console.log('3.  GET  https://unique-beauty.up.railway.app/api/check-table');
+  console.log('4.  POST https://unique-beauty.up.railway.app/api/create-users-table');
+  console.log('5.  GET  https://unique-beauty.up.railway.app/api/pending-users');
+  console.log('6.  POST https://unique-beauty.up.railway.app/api/approve-user');
+  console.log('7.  POST https://unique-beauty.up.railway.app/api/reject-user');
+  console.log('8.  POST https://unique-beauty.up.railway.app/citizen-login');
+  console.log('9.  POST https://unique-beauty.up.railway.app/signup');
+  console.log('10. POST https://unique-beauty.up.railway.app/admin-login');
+  console.log('11. POST https://unique-beauty.up.railway.app/api/reset-db (DEV)');
+  console.log('='.repeat(60));
+  console.log('\n⚠️  IMPORTANT: Run /api/create-users-table first to create tables!');
   console.log('='.repeat(60));
 });
